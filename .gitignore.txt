@@ -1,19 +1,19 @@
-# Keil C build files
-   *.o
-   *.d
-   *.crf
-   *.htm
-   *.dep
-   *.lnp
-   *.map
-   *.lst
-   *.opt
-   *.uvoptx
-   *.uvguix.*
-   *.bak
-   *.scvd
-   *.hex
-   *.axf
-   MDK-ARM/DebugConfig/
-   MDK-ARM/Listings/
-   MDK-ARM/Objects/
+# Bỏ qua các file rác biên dịch của Keil C
+*.o
+*.d
+*.axf
+*.htm
+*.lnp
+*.crf
+*.dep
+*.map
+*.hex
+*.bin
+*.lst
+
+# Bỏ qua file cấu hình cá nhân
+*.uvguix.*
+*.uvoptx
+
+# Bỏ qua luôn cả thư mục build log
+MDK-ARM/myRTOS_Drivers/
