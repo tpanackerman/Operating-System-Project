@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_it.h"
+#include "tiny_os.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -141,14 +142,24 @@ void UsageFault_Handler(void)
 /**
   * @brief This function handles System service call via SWI instruction.
   */
-void SVC_Handler(void)
+  #if defined(__CC_ARM)
+__asm void SVC_Handler(void)
 {
-  /* USER CODE BEGIN SVCall_IRQn 0 */
+    IMPORT OS_CurrentTCB
 
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
+    LDR R0, =OS_CurrentTCB
+    LDR R1, [R0]
+    LDR R0, [R1]
 
-  /* USER CODE END SVCall_IRQn 1 */
+    LDMIA R0!, {R4-R11}
+    MSR PSP, R0
+
+    MOVS R0, #2
+    MSR CONTROL, R0
+    ISB
+
+    LDR LR, =0xFFFFFFFD
+    BX LR
 }
 
 /**
@@ -167,28 +178,92 @@ void DebugMon_Handler(void)
 /**
   * @brief This function handles Pendable request for system service.
   */
-void PendSV_Handler(void)
+__asm void PendSV_Handler(void)
 {
-  /* USER CODE BEGIN PendSV_IRQn 0 */
+    IMPORT OS_CurrentTCB
+    IMPORT OS_Schedule
 
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
+    MRS R0, PSP
 
-  /* USER CODE END PendSV_IRQn 1 */
+    LDR R3, =OS_CurrentTCB
+    LDR R2, [R3]
+
+    CBZ R2, PendSV_CallScheduler
+
+    STMDB R0!, {R4-R11}
+    STR R0, [R2]
+
+PendSV_CallScheduler
+    PUSH {R3, LR}
+    BL OS_Schedule
+    POP {R3, LR}
+
+    STR R0, [R3]
+
+    LDR R1, [R0]
+    LDMIA R1!, {R4-R11}
+    MSR PSP, R1
+
+    BX LR
 }
 
-/**
-  * @brief This function handles System tick timer.
-  */
+#else
+
+/* Keil ARM Compiler 6 / GCC */
+
+__attribute__((naked)) void SVC_Handler(void)
+{
+    __asm volatile (
+        "ldr r0, =OS_CurrentTCB        \n"
+        "ldr r1, [r0]                  \n"
+        "ldr r0, [r1]                  \n"
+
+        "ldmia r0!, {r4-r11}           \n"
+        "msr psp, r0                   \n"
+
+        "movs r0, #2                   \n"
+        "msr control, r0               \n"
+        "isb                           \n"
+
+        "ldr lr, =0xFFFFFFFD           \n"
+        "bx lr                         \n"
+    );
+}
+
+__attribute__((naked)) void PendSV_Handler(void)
+{
+    __asm volatile (
+        "mrs r0, psp                   \n"
+
+        "ldr r3, =OS_CurrentTCB        \n"
+        "ldr r2, [r3]                  \n"
+
+        "cbz r2, 1f                    \n"
+
+        "stmdb r0!, {r4-r11}           \n"
+        "str r0, [r2]                  \n"
+
+        "1:                            \n"
+        "push {r3, lr}                 \n"
+        "bl OS_Schedule                \n"
+        "pop {r3, lr}                  \n"
+
+        "str r0, [r3]                  \n"
+
+        "ldr r1, [r0]                  \n"
+        "ldmia r1!, {r4-r11}           \n"
+        "msr psp, r1                   \n"
+
+        "bx lr                         \n"
+    );
+}
+
+#endif
+
 void SysTick_Handler(void)
 {
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
+    HAL_IncTick();
+    OS_Tick_Handler();
 }
 
 /******************************************************************************/
