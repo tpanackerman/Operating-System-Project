@@ -26,6 +26,7 @@
 #include "gpio_driver.h"
 #include "usb_cdc_driver.h"
 #include "os_protocol.h"
+#include "tiny_os.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +58,71 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+static uint32_t stack_led[128];
+static uint32_t stack_heartbeat[192];
+static uint32_t stack_usb_flush[128];
+static uint32_t stack_usb_rx[192];
+
+static void Task_LED(void *arg)
+{
+    (void)arg;
+
+    while (1) {
+        LED_Toggle();
+
+        if (USB_CDC_IsConnected()) {
+            OS_Delay(500);
+        } else {
+            OS_Delay(200);
+        }
+    }
+}
+
+static void Task_Heartbeat(void *arg)
+{
+    (void)arg;
+
+    while (1) {
+        Proto_Heartbeat_t hb = {
+            .uptime_ms = OS_GetTick(),
+            .num_tasks = OS_GetTaskCount(),
+            .os_ver_major = 0,
+            .os_ver_minor = 1,
+        };
+
+        Proto_Send(PKT_HEARTBEAT, &hb, sizeof(hb));
+
+        OS_Delay(1000);
+    }
+}
+
+static void Task_USB_Flush(void *arg)
+{
+    (void)arg;
+
+    while (1) {
+        USB_CDC_FlushTX();
+        OS_Delay(1);
+    }
+}
+
+static void Task_USB_Rx(void *arg)
+{
+    (void)arg;
+
+    uint8_t cmd[64];
+
+    while (1) {
+        if (USB_CDC_RxAvailable() > 0) {
+            uint16_t n = USB_CDC_Receive(cmd, sizeof(cmd));
+            (void)n;
+
+            Proto_Log("USB command received\r\n");
+        }
+
+        OS_Delay(10);
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -98,7 +163,14 @@ int main(void)
   LED_Off();
   Proto_Log("System started\r\n");
   /* USER CODE END 2 */
+OS_Init();
 
+OS_CreateTask(Task_Heartbeat, 0, stack_heartbeat, 192, 1, 5, "heartbeat");
+OS_CreateTask(Task_USB_Flush, 0, stack_usb_flush, 128, 2, 3, "usb_flush");
+OS_CreateTask(Task_USB_Rx, 0, stack_usb_rx, 192, 2, 5, "usb_rx");
+OS_CreateTask(Task_LED, 0, stack_led, 128, 3, 5, "led");
+
+OS_Start();
   /* USER CODE BEGIN WHILE */
   uint32_t last_heartbeat = 0;
   uint32_t last_led       = 0;
