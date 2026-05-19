@@ -1,4 +1,4 @@
-myrtos_drivers\main.o: ../Core/Src/main.c
+myrtos_drivers\main.o: ..\Core\Src\main.c
 myrtos_drivers\main.o: ../Core/Inc/main.h
 myrtos_drivers\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\main.o: ../Core/Inc/stm32f1xx_hal_conf.h
@@ -45,3 +45,9 @@ myrtos_drivers\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_
 myrtos_drivers\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
 myrtos_drivers\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
 myrtos_drivers\main.o: ..\MyDrivers\Inc\os_protocol.h
+myrtos_drivers\main.o: ..\MyDrivers\Inc\tiny_os.h
+myrtos_drivers\main.o: ..\MyOS\Inc\os_memory.h
+myrtos_drivers\main.o: ..\MyOS\Inc\os_types.h
+myrtos_drivers\main.o: ..\MyOS\Inc\os_mutex.h
+myrtos_drivers\main.o: ..\MyOS\Inc\os_semaphore.h
+myrtos_drivers\main.o: ..\MyOS\Inc\os_queue.h

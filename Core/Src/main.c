@@ -229,9 +229,7 @@ OS_CreateTask(Task_Heartbeat, 0, stack_heartbeat, 192, 1, 5, "heartbeat");
 OS_CreateTask(Task_USB_Flush, 0, stack_usb_flush, 128, 2, 3, "usb_flush");
 OS_CreateTask(Task_USB_Rx, 0, stack_usb_rx, 192, 2, 5, "usb_rx");
 OS_CreateTask(Task_LED, 0, stack_led, 128, 3, 5, "led");
-
-/* Idle task: uu tiên th?p nh?t */
-OS_CreateTask(Task_Idle, 0, stack_idle, 128, 255, 1, "idle");
+OS_CreateTask(Task_Idle, 0, stack_idle, 128, 254, 1, "idle");
 OS_CreateTask(Task_Monitor, 0, stack_monitor, 192, 4, 5, "monitor");
 OS_CreateTask(Task_TV2_Test, 0, stack_test, 128, 3, 5, "tv2_test");
 OS_Start();

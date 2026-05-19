@@ -56,10 +56,9 @@ SemStatus_t OS_Sem_Wait(OS_Sem_t *sem, uint32_t timeout_ms) {
         }
 
         /* Nhu?ng CPU */
-        TCB_t *cur = OS_GetCurrentTask();
-        if (cur != NULL) {
-            OS_Yield();
-        }
+if (OS_GetCurrentTaskId() != 0xFF) {
+    OS_Yield();
+}
     }
 }
 

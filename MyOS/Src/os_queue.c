@@ -70,10 +70,9 @@ QueueStatus_t OS_Queue_Send(OS_Queue_t *queue, const void *msg,
         }
 
         /* Nhu?ng CPU */
-        TCB_t *cur = OS_GetCurrentTask();
-        if (cur != NULL) {
-            OS_Yield();
-        }
+if (OS_GetCurrentTaskId() != 0xFF) {
+    OS_Yield();
+}
     }
 }
 
@@ -116,10 +115,9 @@ QueueStatus_t OS_Queue_Receive(OS_Queue_t *queue, void *msg,
         }
 
         /* Nhu?ng CPU */
-        TCB_t *cur = OS_GetCurrentTask();
-        if (cur != NULL) {
-            OS_Yield();
-        }
+if (OS_GetCurrentTaskId() != 0xFF) {
+    OS_Yield();
+}
     }
 }
 

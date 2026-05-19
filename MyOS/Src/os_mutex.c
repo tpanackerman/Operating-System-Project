@@ -63,10 +63,9 @@ MutexStatus_t OS_Mutex_Lock(OS_Mutex_t *mutex, uint32_t timeout_ms) {
         }
 
         /* Nhu?ng CPU cho task khác – khi RTOS chua có thì ch? busy-wait */
-        TCB_t *cur = OS_GetCurrentTask();
-        if (cur != NULL) {
-            OS_Yield();
-        }
+if (OS_GetCurrentTaskId() != 0xFF) {
+    OS_Yield();
+}
         /* N?u chua có RTOS, vòng l?p ti?p t?c (busy-wait) */
     }
 }
@@ -116,8 +115,7 @@ MutexStatus_t OS_Mutex_TryLock(OS_Mutex_t *mutex) {
     mutex->is_locked = 1;
     mutex->lock_count++;
 
-    TCB_t *cur = OS_GetCurrentTask();
-    mutex->owner_id = (cur != NULL) ? cur->task_id : 0;
+mutex->owner_id = OS_GetCurrentTaskId();
 
     OS_EXIT_CRITICAL();
     return MUTEX_OK;
