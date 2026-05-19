@@ -29,3 +29,4 @@ myrtos_drivers\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal
 myrtos_drivers\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h
 myrtos_drivers\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h
 myrtos_drivers\stm32f1xx_it.o: ../Core/Inc/stm32f1xx_it.h
+myrtos_drivers\stm32f1xx_it.o: ..\MyDrivers\Inc\tiny_os.h

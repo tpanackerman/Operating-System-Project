@@ -1,9 +1,9 @@
 --cpu Cortex-M3
 "myrtos_drivers\startup_stm32f103xb.o"
-"myrtos_drivers\main.o"
 "myrtos_drivers\gpio.o"
 "myrtos_drivers\stm32f1xx_it.o"
 "myrtos_drivers\stm32f1xx_hal_msp.o"
+"myrtos_drivers\main - copy_1.o"
 "myrtos_drivers\usb_device.o"
 "myrtos_drivers\usbd_desc.o"
 "myrtos_drivers\usbd_cdc_if.o"
@@ -29,6 +29,12 @@
 "myrtos_drivers\usbd_cdc.o"
 "myrtos_drivers\usb_cdc_driver.o"
 "myrtos_drivers\gpio_driver.o"
+"myrtos_drivers\tiny_os.o"
+"myrtos_drivers\os_memory.o"
+"myrtos_drivers\os_mutex.o"
+"myrtos_drivers\os_queue.o"
+"myrtos_drivers\os_semaphore.o"
+"myrtos_drivers\test_tv2.o"
 --strict --scatter "myRTOS_Drivers\myRTOS_Drivers.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

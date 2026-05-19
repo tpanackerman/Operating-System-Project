@@ -23,18 +23,11 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
+#include <string.h>
 #include "gpio_driver.h"
 #include "usb_cdc_driver.h"
 #include "os_protocol.h"
-<<<<<<< HEAD
-#include "os_memory.h"
-#include "os_mutex.h"
-#include "os_semaphore.h"
-#include "os_queue.h"
-extern void Test_TV2_RunAll(void);
-=======
 #include "tiny_os.h"
->>>>>>> ce2f0c3f7acc8a349e492d16ed429d9492fdf58c
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +63,8 @@ static uint32_t stack_led[128];
 static uint32_t stack_heartbeat[192];
 static uint32_t stack_usb_flush[128];
 static uint32_t stack_usb_rx[192];
+static uint32_t stack_idle[128];
+static uint32_t stack_monitor[192];
 
 static void Task_LED(void *arg)
 {
@@ -132,6 +127,46 @@ static void Task_USB_Rx(void *arg)
     }
 }
 
+static void Task_Idle(void *arg)
+{
+    (void)arg;
+
+    while (1) {
+        __WFI();      // CPU ng? nh?, ch? interrupt ti?p theo
+    }
+}
+
+static void Task_Monitor(void *arg)
+{
+    (void)arg;
+
+    while (1) {
+        uint8_t count = OS_GetTaskCount();
+
+        for (uint8_t i = 0; i < count; i++) {
+            OS_TCB_t *tcb = OS_GetTaskInfo(i);
+
+            if (tcb != 0) {
+                Proto_TaskStatus_t st;
+
+                st.task_id = tcb->id;
+                memset(st.name, 0, sizeof(st.name));
+
+                if (tcb->name != 0) {
+                    strncpy(st.name, tcb->name, sizeof(st.name) - 1);
+                }
+
+                st.state = (uint8_t)tcb->state;
+                st.priority = tcb->priority;
+                st.stack_free = OS_GetStackFreeBytes(i);
+
+                Proto_Send(PKT_TASK_STATUS, &st, sizeof(st));
+            }
+        }
+
+        OS_Delay(2000);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -162,12 +197,12 @@ int main(void)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-  GPIO_Driver_Init();
-  USB_CDC_Driver_Init();
-  OS_Mem_Init();
-  LED_Off();
-  Proto_Log("System started\r\n");
-  /* USER CODE END 2 */
+GPIO_Driver_Init();
+USB_CDC_Driver_Init();
+LED_Off();
+
+Proto_Log("System started\r\n");
+
 OS_Init();
 
 OS_CreateTask(Task_Heartbeat, 0, stack_heartbeat, 192, 1, 5, "heartbeat");
@@ -175,55 +210,20 @@ OS_CreateTask(Task_USB_Flush, 0, stack_usb_flush, 128, 2, 3, "usb_flush");
 OS_CreateTask(Task_USB_Rx, 0, stack_usb_rx, 192, 2, 5, "usb_rx");
 OS_CreateTask(Task_LED, 0, stack_led, 128, 3, 5, "led");
 
+/* Idle task: uu tiên th?p nh?t */
+OS_CreateTask(Task_Idle, 0, stack_idle, 128, 255, 1, "idle");
+OS_CreateTask(Task_Monitor, 0, stack_monitor, 192, 4, 5, "monitor");
 OS_Start();
+  /* USER CODE END 2 */
+
   /* USER CODE BEGIN WHILE */
-  uint32_t last_heartbeat = 0;
-  uint32_t last_led       = 0;
+
 
   while (1)
   {
-    uint32_t now = HAL_GetTick();
-
-    /* 1. Flush USB TX – sau nay TV1 tao task rieng thay the */
-    USB_CDC_FlushTX();
-
-    /* 2. Chay test TV2 – tu dong dung sau lan dau */
-    Test_TV2_RunAll();
-
-    /* 3. Heartbeat moi 1000ms */
-    if (now - last_heartbeat >= 1000) {
-        last_heartbeat = now;
-        Proto_Heartbeat_t hb = {
-            .uptime_ms    = now,
-            .num_tasks    = 0,
-            .os_ver_major = 0,
-            .os_ver_minor = 1,
-        };
-        Proto_Send(PKT_HEARTBEAT, &hb, sizeof(hb));
-    }
-
-    /* 4. LED nhap nhay – 500ms khi da ket noi, 200ms khi chua */
-    uint32_t blink_rate = USB_CDC_IsConnected() ? 500 : 200;
-    if (now - last_led >= blink_rate) {
-        last_led = now;
-        LED_Toggle();
-    }
-
-    /* 5. Doc lenh tu PC neu co */
-    if (USB_CDC_RxAvailable() > 0) {
-        uint8_t cmd[64];
-        uint16_t n = USB_CDC_Receive(cmd, sizeof(cmd));
-        (void)n;
-        /* Mo rong xu ly lenh o day sau */
-    }
-
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
 }
 
+}
 /**
   * @brief System Clock Configuration
   * @retval None

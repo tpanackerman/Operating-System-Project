@@ -60,8 +60,13 @@ void OS_Tick_Handler(void);
 void OS_Delay(uint32_t ticks);
 void OS_Yield(void);
 
+
 uint32_t OS_GetTick(void);
 uint8_t OS_GetTaskCount(void);
+
+OS_TCB_t* OS_GetCurrentTask(void);
+OS_TCB_t *OS_GetTaskInfo(uint8_t index);
+uint32_t OS_GetStackFreeBytes(uint8_t index);
 
 /* Hàm được PendSV gọi */
 OS_TCB_t *OS_Schedule(void);

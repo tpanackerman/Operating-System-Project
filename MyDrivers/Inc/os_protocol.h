@@ -1,6 +1,7 @@
 #ifndef OS_PROTOCOL_H
 #define OS_PROTOCOL_H
-
+#include <stdint.h>
+#include <string.h>
 #include "usb_cdc_driver.h"
 
 /*

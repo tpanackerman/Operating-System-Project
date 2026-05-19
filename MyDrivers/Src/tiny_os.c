@@ -58,6 +58,10 @@ void OS_Init(void)
     __enable_irq();
 }
 
+OS_TCB_t* OS_GetCurrentTask(void)
+{
+    return (OS_TCB_t*)OS_CurrentTCB;
+}
 int OS_CreateTask(OS_TaskFunc_t task_func,
                   void *arg,
                   uint32_t *stack_mem,
@@ -66,17 +70,19 @@ int OS_CreateTask(OS_TaskFunc_t task_func,
                   uint32_t time_slice_ticks,
                   const char *name)
 {
-    if (task_func == 0 || stack_mem == 0 || stack_words < 64)
-    {
+    if (task_func == 0 || stack_mem == 0 || stack_words < 64) {
         return -1;
     }
 
-    if (os_task_count >= OS_MAX_TASKS)
-    {
+    if (os_task_count >= OS_MAX_TASKS) {
         return -2;
     }
 
     __disable_irq();
+
+    for (uint32_t i = 0; i < stack_words; i++) {
+        stack_mem[i] = 0xA5A5A5A5UL;
+    }
 
     uint8_t id = os_task_count;
     OS_TCB_t *tcb = &os_tasks[id];
@@ -292,7 +298,35 @@ static void OS_CallSVC(void)
     __asm volatile("svc 0");
 #endif
 }
+OS_TCB_t *OS_GetTaskInfo(uint8_t index)
+{
+    if (index >= os_task_count) {
+        return 0;
+    }
 
+    return &os_tasks[index];
+}
+
+uint32_t OS_GetStackFreeBytes(uint8_t index)
+{
+    if (index >= os_task_count) {
+        return 0;
+    }
+
+    OS_TCB_t *tcb = &os_tasks[index];
+
+    uint32_t free_words = 0;
+
+    for (uint32_t i = 0; i < tcb->stack_words; i++) {
+        if (tcb->stack_start[i] == 0xA5A5A5A5UL) {
+            free_words++;
+        } else {
+            break;
+        }
+    }
+
+    return free_words * 4;
+}
 void OS_Start(void)
 {
     if (os_task_count == 0)
