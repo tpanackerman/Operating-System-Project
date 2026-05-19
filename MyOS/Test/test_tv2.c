@@ -288,7 +288,7 @@ void Test_TV2_RunAll(void) {
     if (done) return;   /* Ch? ch?y 1 l?n */
     done = 1;
 
-    HAL_Delay(2000);    /* Ch? USB k?t n?i */
+    OS_Delay(2000);    /* Ch? USB k?t n?i */
 
     USB_CDC_SendString("\r\n");
     USB_CDC_SendString("========================================\r\n");
@@ -296,16 +296,16 @@ void Test_TV2_RunAll(void) {
     USB_CDC_SendString("========================================\r\n");
 
     Test_Memory();
-    HAL_Delay(100);
+    OS_Delay(100);
 
     Test_Mutex();
-    HAL_Delay(100);
+    OS_Delay(100);
 
     Test_Semaphore();
-    HAL_Delay(100);
+    OS_Delay(100);
 
     Test_Queue();
-    HAL_Delay(100);
+    OS_Delay(100);
 
     Test_SendStats();
 

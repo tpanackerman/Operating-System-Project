@@ -408,9 +408,14 @@
               <FilePath>../Core/Src/stm32f1xx_hal_msp.c</FilePath>
             </File>
             <File>
-              <FileName>main - Copy.c</FileName>
+              <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Core\Src\main - Copy.c</FilePath>
+              <FilePath>..\Core\Src\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>system_stm32f1xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\system_stm32f1xx.c</FilePath>
             </File>
           </Files>
         </Group>

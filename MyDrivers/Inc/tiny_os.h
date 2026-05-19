@@ -16,7 +16,8 @@ typedef enum
     OS_TASK_READY,
     OS_TASK_RUNNING,
     OS_TASK_DELAYED,
-	OS_TASK_BLOCKED
+    OS_TASK_BLOCKED,
+    OS_TASK_SUSPENDED
 } OS_TaskState_t;
 
 /*

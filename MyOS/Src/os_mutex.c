@@ -4,20 +4,14 @@
 /* ================================================================
    KH?I T?O
    ================================================================ */
-void OS_Mutex_Init(OS_Mutex_t *mutex, const char *name) {
+void OS_Mutex_Init(OS_Mutex_t *mutex, const char *name)
+{
     if (mutex == NULL) return;
 
     OS_ENTER_CRITICAL();
 
     mutex->is_locked   = 0;
-uint8_t current_id = OS_GetCurrentTaskId();
-
-if (current_id == 0xFF)
-{
-    return OS_ERROR;
-}
-
-mutex->owner_id = current_id;
+    mutex->owner_id    = 0xFF;
     mutex->lock_count  = 0;
     mutex->initialized = 1;
 
@@ -26,6 +20,7 @@ mutex->owner_id = current_id;
         mutex->name[sizeof(mutex->name) - 1] = '\0';
     } else {
         strncpy(mutex->name, "Unnamed", sizeof(mutex->name) - 1);
+        mutex->name[sizeof(mutex->name) - 1] = '\0';
     }
 
     OS_EXIT_CRITICAL();
@@ -49,8 +44,7 @@ MutexStatus_t OS_Mutex_Lock(OS_Mutex_t *mutex, uint32_t timeout_ms) {
             mutex->lock_count++;
 
             /* L?y ID task hi?n t?i n?u RTOS dã ch?y */
-            TCB_t *cur = OS_GetCurrentTask();
-            mutex->owner_id = (cur != NULL) ? cur->task_id : 0;
+			mutex->owner_id = OS_GetCurrentTaskId();
 
             OS_EXIT_CRITICAL();
             return MUTEX_OK;
@@ -92,12 +86,12 @@ MutexStatus_t OS_Mutex_Unlock(OS_Mutex_t *mutex) {
     }
 
     /* Ki?m tra task hi?n t?i có ph?i owner không */
-    TCB_t *cur = OS_GetCurrentTask();
-    if (cur != NULL && cur->task_id != mutex->owner_id) {
-        /* Task khác không du?c phép unlock */
-        OS_EXIT_CRITICAL();
-        return MUTEX_ERROR;
-    }
+uint8_t current_id = OS_GetCurrentTaskId();
+
+if (current_id != 0xFF && current_id != mutex->owner_id) {
+    OS_EXIT_CRITICAL();
+    return MUTEX_ERROR;
+}
 
     mutex->is_locked = 0;
     mutex->owner_id  = 0xFF;

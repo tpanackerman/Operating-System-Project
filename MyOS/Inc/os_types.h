@@ -44,8 +44,8 @@ typedef struct TCB {
 
 /* ===== API TV1 S? IMPLEMENT – TV2 g?i các hàm này ===== */
 /* TV2 c?n bi?t task hi?n t?i dang ch?y d? gán owner Mutex */
-extern TCB_t *OS_GetCurrentTask(void);
-extern void   OS_Delay(uint32_t ticks);
-extern void   OS_Yield(void);
+extern uint8_t OS_GetCurrentTaskId(void);
+extern void OS_Delay(uint32_t ticks);
+extern void OS_Yield(void);
 
 #endif /* OS_TYPES_H */
