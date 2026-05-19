@@ -58,10 +58,24 @@ void OS_Init(void)
     __enable_irq();
 }
 
-OS_TCB_t* OS_GetCurrentTask(void)
+OS_TCB_t *OS_GetCurrentTask(void)
 {
-    return (OS_TCB_t*)OS_CurrentTCB;
+    return (OS_TCB_t *)OS_CurrentTCB;
 }
+
+uint8_t OS_GetCurrentTaskId(void)
+{
+    if (OS_CurrentTCB == 0)
+        return 0xFF;
+
+    return OS_CurrentTCB->id;
+}
+
+uint8_t OS_IsRunning(void)
+{
+    return os_started;
+}
+
 int OS_CreateTask(OS_TaskFunc_t task_func,
                   void *arg,
                   uint32_t *stack_mem,
@@ -346,4 +360,31 @@ void OS_Start(void)
     while (1)
     {
     }
+}
+void OS_BlockCurrent(uint32_t timeout_ticks)
+{
+    __disable_irq();
+
+    if (OS_CurrentTCB != 0)
+    {
+        OS_CurrentTCB->state = OS_TASK_BLOCKED;
+        OS_CurrentTCB->delay_ticks = timeout_ticks;
+    }
+
+    __enable_irq();
+
+    OS_Yield();
+}
+
+void OS_WakeTask(OS_TCB_t *task)
+{
+    __disable_irq();
+
+    if (task != 0 && task->state == OS_TASK_BLOCKED)
+    {
+        task->state = OS_TASK_READY;
+        task->delay_ticks = 0;
+    }
+
+    __enable_irq();
 }

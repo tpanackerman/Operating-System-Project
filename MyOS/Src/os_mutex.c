@@ -10,7 +10,14 @@ void OS_Mutex_Init(OS_Mutex_t *mutex, const char *name) {
     OS_ENTER_CRITICAL();
 
     mutex->is_locked   = 0;
-    mutex->owner_id    = 0xFF;  /* 0xFF = không có owner */
+uint8_t current_id = OS_GetCurrentTaskId();
+
+if (current_id == 0xFF)
+{
+    return OS_ERROR;
+}
+
+mutex->owner_id = current_id;
     mutex->lock_count  = 0;
     mutex->initialized = 1;
 

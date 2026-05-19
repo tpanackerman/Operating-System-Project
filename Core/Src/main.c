@@ -28,6 +28,12 @@
 #include "usb_cdc_driver.h"
 #include "os_protocol.h"
 #include "tiny_os.h"
+#include "os_memory.h"
+#include "os_mutex.h"
+#include "os_semaphore.h"
+#include "os_queue.h"
+
+extern void Test_TV2_RunAll(void);
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,6 +71,7 @@ static uint32_t stack_usb_flush[128];
 static uint32_t stack_usb_rx[192];
 static uint32_t stack_idle[128];
 static uint32_t stack_monitor[192];
+static uint32_t stack_test[128];
 
 static void Task_LED(void *arg)
 {
@@ -167,6 +174,18 @@ static void Task_Monitor(void *arg)
         OS_Delay(2000);
     }
 }
+
+static void Task_TV2_Test(void *arg)
+{
+    (void)arg;
+
+    Test_TV2_RunAll();
+
+    while (1)
+    {
+        OS_Delay(1000);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -213,6 +232,7 @@ OS_CreateTask(Task_LED, 0, stack_led, 128, 3, 5, "led");
 /* Idle task: uu tiên th?p nh?t */
 OS_CreateTask(Task_Idle, 0, stack_idle, 128, 255, 1, "idle");
 OS_CreateTask(Task_Monitor, 0, stack_monitor, 192, 4, 5, "monitor");
+OS_CreateTask(Task_TV2_Test, NULL, stack_test, 128, 3);
 OS_Start();
   /* USER CODE END 2 */
 

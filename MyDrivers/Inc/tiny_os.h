@@ -15,8 +15,8 @@ typedef enum
     OS_TASK_UNUSED = 0,
     OS_TASK_READY,
     OS_TASK_RUNNING,
-    OS_TASK_BLOCKED,
-    OS_TASK_SUSPENDED
+    OS_TASK_DELAYED,
+	OS_TASK_BLOCKED
 } OS_TaskState_t;
 
 /*
@@ -64,7 +64,9 @@ void OS_Yield(void);
 uint32_t OS_GetTick(void);
 uint8_t OS_GetTaskCount(void);
 
-OS_TCB_t* OS_GetCurrentTask(void);
+OS_TCB_t *OS_GetCurrentTask(void);
+uint8_t OS_GetCurrentTaskId(void);
+uint8_t OS_IsRunning(void);
 OS_TCB_t *OS_GetTaskInfo(uint8_t index);
 uint32_t OS_GetStackFreeBytes(uint8_t index);
 
