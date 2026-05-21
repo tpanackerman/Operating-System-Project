@@ -22,7 +22,7 @@
 "myrtos_drivers\stm32f1xx_hal_flash.o"
 "myrtos_drivers\stm32f1xx_hal_flash_ex.o"
 "myrtos_drivers\stm32f1xx_hal_exti.o"
-"myrtos_drivers\system_stm32f1xx_1.o"
+"myrtos_drivers\system_stm32f1xx.o"
 "myrtos_drivers\usbd_core.o"
 "myrtos_drivers\usbd_ctlreq.o"
 "myrtos_drivers\usbd_ioreq.o"

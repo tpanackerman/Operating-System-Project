@@ -4,6 +4,7 @@
    RING BUFFER N?I B?
    ======================================================== */
 extern uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+extern uint8_t CDC_IsTxBusy_FS(void);
 /* Mask dùng thay modulo (nhanh hon, yêu c?u size là luy th?a 2) */
 #define TX_MASK  (USB_TX_RING_SIZE - 1)
 #define RX_MASK  (USB_RX_RING_SIZE - 1)
@@ -92,48 +93,58 @@ USB_CDC_Status USB_CDC_SendString(const char *str) {
     return USB_CDC_Send((const uint8_t *)str, (uint16_t)strlen(str));
 }
 
-USB_CDC_Status USB_CDC_Printf(const char *fmt, ...) {
+USB_CDC_Status USB_CDC_Printf(const char *fmt, ...)
+{
     char tmp[128];
     va_list args;
+
     va_start(args, fmt);
     int n = vsnprintf(tmp, sizeof(tmp), fmt, args);
     va_end(args);
-    if (n <= 0) return USB_CDC_ERROR;
+
+    if (n <= 0) {
+        return USB_CDC_ERROR;
+    }
+
+    if (n >= (int)sizeof(tmp)) {
+        n = sizeof(tmp) - 1;
+    }
+
     return USB_CDC_Send((uint8_t *)tmp, (uint16_t)n);
 }
 
 /* ========================================================
    FLUSH TX – g?i d?nh k? t? task th?p uu tiên
    ======================================================== */
-void USB_CDC_FlushTX(void) {
-    /* Không làm gì n?u: chua k?t n?i, dang g?i, ho?c buffer tr?ng */
+void USB_CDC_FlushTX(void)
+{
     if (!s_connected) return;
-    if (s_tx_busy)    return;
+
+    if (CDC_IsTxBusy_FS()) return;
+
     if (TxUsed() == 0) return;
 
-    /* L?y t?i da 1 packet (64 bytes) ra kh?i ring buffer */
     uint16_t send_len = TxUsed();
-    if (send_len > USB_TX_PKT_MAX) send_len = USB_TX_PKT_MAX;
+
+    if (send_len > USB_TX_PKT_MAX) {
+        send_len = USB_TX_PKT_MAX;
+    }
 
     for (uint16_t i = 0; i < send_len; i++) {
         s_tx_pkt[i] = s_tx.data[s_tx.tail & TX_MASK];
         s_tx.tail++;
     }
 
-    /* G?i vào USB stack – n?u thành công, s_tx_busy = 1 d?n khi TxDone */
-    s_tx_busy = 1;
     if (CDC_Transmit_FS(s_tx_pkt, send_len) != USBD_OK) {
-        /* Th?t b?i: hoàn l?i tail d? th? l?i l?n sau */
         s_tx.tail -= send_len;
-        s_tx_busy  = 0;
     }
 }
 
 /* Callback khi USB g?i xong 1 packet – g?i t? usbd_cdc_if.c */
 void USB_CDC_TxDoneCallback(void) {
-    s_tx_busy = 0;
+    //s_tx_busy = 0;
     /* T? d?ng g?i packet ti?p n?u còn d? li?u trong buffer */
-    USB_CDC_FlushTX();
+    //USB_CDC_FlushTX();
 }
 
 /* ========================================================

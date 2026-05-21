@@ -183,6 +183,11 @@ __asm void PendSV_Handler(void)
     IMPORT OS_CurrentTCB
     IMPORT OS_Schedule
 
+    ; PA1 = 1, b?t d?u do context switch
+    LDR R1, =0x40010810
+    LDR R2, =0x00000002
+    STR R2, [R1]
+
     MRS R0, PSP
 
     LDR R3, =OS_CurrentTCB
@@ -203,6 +208,11 @@ PendSV_CallScheduler
     LDR R1, [R0]
     LDMIA R1!, {R4-R11}
     MSR PSP, R1
+
+    ; PA1 = 0, k?t thúc do context switch
+    LDR R1, =0x40010810
+    LDR R2, =0x00020000
+    STR R2, [R1]
 
     BX LR
 }
@@ -233,6 +243,11 @@ __attribute__((naked)) void SVC_Handler(void)
 __attribute__((naked)) void PendSV_Handler(void)
 {
     __asm volatile (
+        /* PA1 = 1, b?t d?u do */
+        "ldr r1, =0x40010810           \n"
+        "ldr r2, =0x00000002           \n"
+        "str r2, [r1]                  \n"
+
         "mrs r0, psp                   \n"
 
         "ldr r3, =OS_CurrentTCB        \n"
@@ -253,6 +268,11 @@ __attribute__((naked)) void PendSV_Handler(void)
         "ldr r1, [r0]                  \n"
         "ldmia r1!, {r4-r11}           \n"
         "msr psp, r1                   \n"
+
+        /* PA1 = 0, k?t thúc do */
+        "ldr r1, =0x40010810           \n"
+        "ldr r2, =0x00020000           \n"
+        "str r2, [r1]                  \n"
 
         "bx lr                         \n"
     );

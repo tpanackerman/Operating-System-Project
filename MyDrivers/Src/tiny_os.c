@@ -141,6 +141,8 @@ int OS_CreateTask(OS_TaskFunc_t task_func,
     tcb->delay_ticks = 0;
     tcb->time_slice_ticks = (time_slice_ticks == 0) ? OS_DEFAULT_SLICE : time_slice_ticks;
     tcb->slice_left = tcb->time_slice_ticks;
+		tcb->run_count = 0;
+		tcb->last_run_tick = 0;
     tcb->task_func = task_func;
     tcb->arg = arg;
     tcb->name = name;
@@ -205,12 +207,16 @@ OS_TCB_t *OS_Schedule(void)
 
     OS_TCB_t *next = OS_SelectNextTask();
 
-    if (next != 0)
-    {
-        next->state = OS_TASK_RUNNING;
-        next->slice_left = next->time_slice_ticks;
-        OS_CurrentTCB = next;
-    }
+		if (next != 0)
+		{
+				next->state = OS_TASK_RUNNING;
+				next->slice_left = next->time_slice_ticks;
+
+				next->run_count++;
+				next->last_run_tick = os_tick;
+
+				OS_CurrentTCB = next;
+		}
 
     return (OS_TCB_t *)OS_CurrentTCB;
 }
@@ -387,4 +393,22 @@ void OS_WakeTask(OS_TCB_t *task)
     }
 
     __enable_irq();
+}
+
+uint32_t OS_GetTaskRunCount(uint8_t index)
+{
+    if (index >= os_task_count) {
+        return 0;
+    }
+
+    return os_tasks[index].run_count;
+}
+
+uint32_t OS_GetTaskLastRunTick(uint8_t index)
+{
+    if (index >= os_task_count) {
+        return 0;
+    }
+
+    return os_tasks[index].last_run_tick;
 }

@@ -36,8 +36,11 @@ typedef struct
     OS_TaskState_t state;
 
     uint32_t delay_ticks;
-    uint32_t time_slice_ticks;
-    uint32_t slice_left;
+	uint32_t time_slice_ticks;
+	uint32_t slice_left;
+
+	uint32_t run_count;
+	uint32_t last_run_tick;
 
     OS_TaskFunc_t task_func;
     void *arg;
@@ -60,6 +63,8 @@ void OS_Start(void);
 void OS_Tick_Handler(void);
 void OS_Delay(uint32_t ticks);
 void OS_Yield(void);
+void OS_BlockCurrent(uint32_t timeout_ticks);
+void OS_WakeTask(OS_TCB_t *task);
 
 
 uint32_t OS_GetTick(void);
@@ -70,6 +75,12 @@ uint8_t OS_GetCurrentTaskId(void);
 uint8_t OS_IsRunning(void);
 OS_TCB_t *OS_GetTaskInfo(uint8_t index);
 uint32_t OS_GetStackFreeBytes(uint8_t index);
+
+uint32_t OS_GetTaskRunCount(uint8_t index);
+uint32_t OS_GetTaskLastRunTick(uint8_t index);
+
+void OS_BlockCurrent(uint32_t timeout_ticks);
+void OS_WakeTask(OS_TCB_t *task);
 
 /* Hàm được PendSV gọi */
 OS_TCB_t *OS_Schedule(void);

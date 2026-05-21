@@ -78,7 +78,7 @@
   */
 
 /* USER CODE BEGIN EXPORTED_MACRO */
-
+uint8_t CDC_IsTxBusy_FS(void);
 /* USER CODE END EXPORTED_MACRO */
 
 /**

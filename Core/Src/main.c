@@ -21,6 +21,7 @@
 #include "main.h"
 #include "usb_device.h"
 #include "gpio.h"
+#include <stdio.h>
 
 /* USER CODE BEGIN Includes */
 #include <string.h>
@@ -68,10 +69,12 @@ void SystemClock_Config(void);
 static uint32_t stack_led[128];
 static uint32_t stack_heartbeat[192];
 static uint32_t stack_usb_flush[128];
-static uint32_t stack_usb_rx[192];
+static uint32_t stack_usb_rx[512];
 static uint32_t stack_idle[128];
-static uint32_t stack_monitor[192];
-static uint32_t stack_test[128];
+static uint32_t stack_monitor[768];
+static uint32_t stack_test[512];
+static volatile uint32_t heartbeat_alive = 0;
+static volatile uint32_t monitor_alive = 0;
 
 static void Task_LED(void *arg)
 {
@@ -81,7 +84,7 @@ static void Task_LED(void *arg)
         LED_Toggle();
 
         if (USB_CDC_IsConnected()) {
-            OS_Delay(500);
+            OS_Delay(1000);
         } else {
             OS_Delay(200);
         }
@@ -93,15 +96,7 @@ static void Task_Heartbeat(void *arg)
     (void)arg;
 
     while (1) {
-        Proto_Heartbeat_t hb = {
-            .uptime_ms = OS_GetTick(),
-            .num_tasks = OS_GetTaskCount(),
-            .os_ver_major = 0,
-            .os_ver_minor = 1,
-        };
-
-        Proto_Send(PKT_HEARTBEAT, &hb, sizeof(hb));
-
+        heartbeat_alive++;
         OS_Delay(1000);
     }
 }
@@ -112,7 +107,7 @@ static void Task_USB_Flush(void *arg)
 
     while (1) {
         USB_CDC_FlushTX();
-        OS_Delay(1);
+        OS_Delay(20);
     }
 }
 
@@ -120,14 +115,14 @@ static void Task_USB_Rx(void *arg)
 {
     (void)arg;
 
-    uint8_t cmd[64];
+    static uint8_t cmd[64];
 
     while (1) {
         if (USB_CDC_RxAvailable() > 0) {
             uint16_t n = USB_CDC_Receive(cmd, sizeof(cmd));
             (void)n;
 
-            Proto_Log("USB command received\r\n");
+            USB_CDC_SendString("USB command received\r\n");
         }
 
         OS_Delay(10);
@@ -139,45 +134,77 @@ static void Task_Idle(void *arg)
     (void)arg;
 
     while (1) {
-        __WFI();      // CPU ng? nh?, ch? interrupt ti?p theo
+        __WFI();
+        OS_Delay(1);
     }
+}
+
+static void Debug_SendLine(const char *s)
+{
+    USB_CDC_SendString((char *)s);
+    USB_CDC_FlushTX();
+    OS_Delay(30);
+}
+
+static void Debug_SendU32(const char *name, uint32_t value)
+{
+    char buf[64];
+
+    snprintf(buf, sizeof(buf), "%s=%lu\r\n",
+             name,
+             (unsigned long)value);
+
+    USB_CDC_SendString(buf);
+    USB_CDC_FlushTX();
+    OS_Delay(30);
 }
 
 static void Task_Monitor(void *arg)
 {
     (void)arg;
 
+    OS_Delay(1000);
+
     while (1) {
+        monitor_alive++;
+
         uint8_t count = OS_GetTaskCount();
+
+        Debug_SendLine("\r\n========== TASK MONITOR ==========\r\n");
+
+        Debug_SendU32("monitor_alive", monitor_alive);
+        Debug_SendU32("tick", OS_GetTick());
+        Debug_SendU32("task_count", count);
 
         for (uint8_t i = 0; i < count; i++) {
             OS_TCB_t *tcb = OS_GetTaskInfo(i);
 
-            if (tcb != 0) {
-                Proto_TaskStatus_t st;
+            Debug_SendLine("--------------------\r\n");
+            Debug_SendU32("i", i);
 
-                st.task_id = tcb->id;
-                memset(st.name, 0, sizeof(st.name));
-
-                if (tcb->name != 0) {
-                    strncpy(st.name, tcb->name, sizeof(st.name) - 1);
-                }
-
-                st.state = (uint8_t)tcb->state;
-                st.priority = tcb->priority;
-                st.stack_free = OS_GetStackFreeBytes(i);
-
-                Proto_Send(PKT_TASK_STATUS, &st, sizeof(st));
+            if (tcb == 0) {
+                Debug_SendLine("tcb=NULL\r\n");
+                continue;
             }
+
+            Debug_SendU32("id", tcb->id);
+            Debug_SendU32("state", (uint32_t)tcb->state);
+            Debug_SendU32("priority", tcb->priority);
+            Debug_SendU32("run", OS_GetTaskRunCount(i));
+            Debug_SendU32("last", OS_GetTaskLastRunTick(i));
         }
 
-        OS_Delay(2000);
+        Debug_SendLine("==================================\r\n");
+
+        OS_Delay(3000);
     }
 }
 
 static void Task_TV2_Test(void *arg)
 {
     (void)arg;
+    
+    OS_Delay(5000);
 
     Test_TV2_RunAll();
 
@@ -220,18 +247,18 @@ GPIO_Driver_Init();
 USB_CDC_Driver_Init();
 LED_Off();
 
-Proto_Log("System started\r\n");
+USB_CDC_SendString("System started\r\n");
 
 OS_Init();
 OS_Mem_Init();
 
-OS_CreateTask(Task_Heartbeat, 0, stack_heartbeat, 192, 1, 5, "heartbeat");
-OS_CreateTask(Task_USB_Flush, 0, stack_usb_flush, 128, 2, 3, "usb_flush");
-OS_CreateTask(Task_USB_Rx, 0, stack_usb_rx, 192, 2, 5, "usb_rx");
-OS_CreateTask(Task_LED, 0, stack_led, 128, 3, 5, "led");
+OS_CreateTask(Task_USB_Rx, 0, stack_usb_rx, 512, 2, 5, "usb_rx");
+OS_CreateTask(Task_Heartbeat, 0, stack_heartbeat, 192, 5, 5, "heartbeat");
+OS_CreateTask(Task_LED, 0, stack_led, 128, 10, 5, "led");
+OS_CreateTask(Task_Monitor, 0, stack_monitor, 768, 20, 5, "monitor");
+//OS_CreateTask(Task_TV2_Test, 0, stack_test, 512, 30, 5, "tv2_test");
+//OS_CreateTask(Task_USB_Flush, 0, stack_usb_flush, 128, 250, 3, "usb_flush");
 OS_CreateTask(Task_Idle, 0, stack_idle, 128, 254, 1, "idle");
-OS_CreateTask(Task_Monitor, 0, stack_monitor, 192, 4, 5, "monitor");
-OS_CreateTask(Task_TV2_Test, 0, stack_test, 128, 3, 5, "tv2_test");
 OS_Start();
   /* USER CODE END 2 */
 
