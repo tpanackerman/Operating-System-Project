@@ -32,3 +32,6 @@
 - LED task nháy PC13
 - USB CDC gửi heartbeat
 - Queue/Semaphore/Mutex chạy test
+
+thêm pa9 10 để test mini project
+<img width="827" height="724" alt="image" src="https://github.com/user-attachments/assets/5cdd9fcf-5ece-4e66-b959-5fe6bec0fe53" />
