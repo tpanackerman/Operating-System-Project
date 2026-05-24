@@ -1,6 +1,6 @@
 myrtos_drivers\os_queue.o: ..\MyOS\Src\os_queue.c
-myrtos_drivers\os_queue.o: ..\MyOS\Inc\os_queue.h
-myrtos_drivers\os_queue.o: ..\MyOS\Inc\os_types.h
+myrtos_drivers\os_queue.o: ../MyOS/Inc/os_queue.h
+myrtos_drivers\os_queue.o: ../MyOS/Inc/os_types.h
 myrtos_drivers\os_queue.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\os_queue.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\os_queue.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

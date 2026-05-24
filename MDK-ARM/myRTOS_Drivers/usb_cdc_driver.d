@@ -1,5 +1,5 @@
 myrtos_drivers\usb_cdc_driver.o: ..\MyDrivers\Src\usb_cdc_driver.c
-myrtos_drivers\usb_cdc_driver.o: ..\MyDrivers\Inc\usb_cdc_driver.h
+myrtos_drivers\usb_cdc_driver.o: ../MyDrivers/Inc/usb_cdc_driver.h
 myrtos_drivers\usb_cdc_driver.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\usb_cdc_driver.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\usb_cdc_driver.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

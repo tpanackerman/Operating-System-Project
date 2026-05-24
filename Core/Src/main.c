@@ -16,13 +16,12 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
 #include "gpio.h"
-#include <stdio.h>
 
+/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include "gpio_driver.h"
@@ -34,246 +33,132 @@
 #include "os_semaphore.h"
 #include "os_queue.h"
 
-extern void Test_TV2_RunAll(void);
-/* USER CODE END Includes */
+/* =========================================
+ * KHAI BÁO CÁC CHÂN (PORTA)
+ * ========================================= */
+ void SystemClock_Config(void);
+#define BTN_PORT        GPIOA
+#define BTN_PIN         GPIO_PIN_0
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
+#define SENSOR_PORT     GPIOA
+#define SENSOR_PIN      GPIO_PIN_2
 
-/* USER CODE END PTD */
+#define RGB_R_PORT      GPIOA
+#define RGB_R_PIN       GPIO_PIN_3
+#define RGB_G_PORT      GPIOA
+#define RGB_G_PIN       GPIO_PIN_4
+#define RGB_B_PORT      GPIOA
+#define RGB_B_PIN       GPIO_PIN_5
 
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
+// KHAI BÁO CHÂN LED M?I C?M NGOÀI
+#define EXT_LED_PORT    GPIOA
+#define EXT_LED_PIN     GPIO_PIN_6
 
-/* USER CODE END PD */
+/* =========================================
+ * BI?N TR?NG THÁI H? TH?NG
+ * ========================================= */
+typedef enum {
+    MODE_OFF = 0,
+    MODE_ON  = 1,
+    MODE_AUTO = 2
+} SystemMode_t;
 
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
+volatile SystemMode_t current_mode = MODE_OFF;
 
-/* USER CODE END PM */
+// B? nh? Stack cho 2 Task
+uint32_t stack_button[128];
+uint32_t stack_sensor[128];
 
-/* Private variables ---------------------------------------------------------*/
+/* =========================================
+ * CÁC HÀM H? TR? ÐI?U KHI?N
+ * ========================================= */
+void RGB_SetColor(uint8_t r, uint8_t g, uint8_t b) {
+    GPIO_Write(RGB_R_PORT, RGB_R_PIN, r);
+    GPIO_Write(RGB_G_PORT, RGB_G_PIN, g);
+    GPIO_Write(RGB_B_PORT, RGB_B_PIN, b);
+}
 
-/* USER CODE BEGIN PV */
+// Hàm di?u khi?n LED c?m ngoài (Sáng khi ? m?c 1)
+void EXT_LED_On(void) {
+    GPIO_Write(EXT_LED_PORT, EXT_LED_PIN, 1);
+}
 
-/* USER CODE END PV */
+void EXT_LED_Off(void) {
+    GPIO_Write(EXT_LED_PORT, EXT_LED_PIN, 0);
+}
 
-/* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
+/* =========================================
+ * TASK 1: QU?N LÝ NÚT NH?N & Ð?I TR?NG THÁI
+ * ========================================= */
+void Task_Button_Control(void *arg) {
+    uint8_t last_btn_state = 1; // M?c d?nh Pull-up là 1
 
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-static uint32_t stack_led[128];
-static uint32_t stack_heartbeat[192];
-static uint32_t stack_usb_flush[128];
-static uint32_t stack_usb_rx[512];
-static uint32_t stack_idle[128];
-static uint32_t stack_monitor[768];
-static uint32_t stack_test[512];
-static volatile uint32_t heartbeat_alive = 0;
-static volatile uint32_t monitor_alive = 0;
-
-static void Task_LED(void *arg)
-{
-    (void)arg;
+    // Kh?i t?o ban d?u: T?t h?t
+    RGB_SetColor(0, 0, 0); 
+    EXT_LED_Off();
 
     while (1) {
-        LED_Toggle();
+        uint8_t current_btn = GPIO_Read(BTN_PORT, BTN_PIN);
 
-        if (USB_CDC_IsConnected()) {
-            OS_Delay(1000);
-        } else {
-            OS_Delay(200);
-        }
-    }
-}
+        // Phát hi?n su?n xu?ng (nh?n nút)
+        if (current_btn == 0 && last_btn_state == 1) {
+            
+            OS_Delay(20); // Ch?ng d?i phím 20ms
+            
+            if (GPIO_Read(BTN_PORT, BTN_PIN) == 0) { // Ch?c ch?n dã nh?n
+                
+                // Ð?i tr?ng thái: OFF(0) -> ON(1) -> AUTO(2) -> vòng l?i OFF(0)
+                if (current_mode == MODE_AUTO) {
+                    current_mode = MODE_OFF;
+                } else {
+                    current_mode++;
+                }
 
-static void Task_Heartbeat(void *arg)
-{
-    (void)arg;
+                // C?p nh?t LED RGB ch? báo và LED c?m ngoài
+                switch (current_mode) {
+                    case MODE_OFF:
+                        RGB_SetColor(0, 0, 0); // RGB T?t
+                        EXT_LED_Off();         // T?t c?ng LED ngoài
+                        break;
 
-    while (1) {
-        heartbeat_alive++;
-        OS_Delay(1000);
-    }
-}
+                    case MODE_ON:
+                        RGB_SetColor(0, 1, 0); // RGB Xanh lá
+                        EXT_LED_On();          // B?t c?ng LED ngoài
+                        break;
 
-static void Task_USB_Flush(void *arg)
-{
-    (void)arg;
-
-    while (1) {
-        USB_CDC_FlushTX();
-        OS_Delay(20);
-    }
-}
-
-static void Task_USB_Rx(void *arg)
-{
-    (void)arg;
-
-    static uint8_t cmd[64];
-
-    while (1) {
-        if (USB_CDC_RxAvailable() > 0) {
-            uint16_t n = USB_CDC_Receive(cmd, sizeof(cmd));
-            (void)n;
-
-            USB_CDC_SendString("USB command received\r\n");
-        }
-
-        OS_Delay(10);
-    }
-}
-
-static void Task_Idle(void *arg)
-{
-    (void)arg;
-
-    while (1) {
-        __WFI();
-        OS_Delay(1);
-    }
-}
-
-static void Debug_SendLine(const char *s)
-{
-    USB_CDC_SendString((char *)s);
-    USB_CDC_FlushTX();
-    OS_Delay(30);
-}
-
-static void Debug_SendU32(const char *name, uint32_t value)
-{
-    char buf[64];
-
-    snprintf(buf, sizeof(buf), "%s=%lu\r\n",
-             name,
-             (unsigned long)value);
-
-    USB_CDC_SendString(buf);
-    USB_CDC_FlushTX();
-    OS_Delay(30);
-}
-
-static void Task_Monitor(void *arg)
-{
-    (void)arg;
-
-    OS_Delay(1000);
-
-    while (1) {
-        monitor_alive++;
-
-        uint8_t count = OS_GetTaskCount();
-
-        Debug_SendLine("\r\n========== TASK MONITOR ==========\r\n");
-
-        Debug_SendU32("monitor_alive", monitor_alive);
-        Debug_SendU32("tick", OS_GetTick());
-        Debug_SendU32("task_count", count);
-
-        for (uint8_t i = 0; i < count; i++) {
-            OS_TCB_t *tcb = OS_GetTaskInfo(i);
-
-            Debug_SendLine("--------------------\r\n");
-            Debug_SendU32("i", i);
-
-            if (tcb == 0) {
-                Debug_SendLine("tcb=NULL\r\n");
-                continue;
+                    case MODE_AUTO:
+                        RGB_SetColor(1, 1, 0); // RGB Vàng
+                        // KHÔNG tác d?ng LED ngoài ? dây, d? Task 2 t? lo
+                        break;
+                }
             }
-
-            Debug_SendU32("id", tcb->id);
-            Debug_SendU32("state", (uint32_t)tcb->state);
-            Debug_SendU32("priority", tcb->priority);
-            Debug_SendU32("run", OS_GetTaskRunCount(i));
-            Debug_SendU32("last", OS_GetTaskLastRunTick(i));
         }
-
-        Debug_SendLine("==================================\r\n");
-
-        OS_Delay(3000);
+        last_btn_state = current_btn;
+        OS_Delay(50); // Nhu?ng CPU
     }
 }
 
-static void Task_TV2_Test(void *arg)
-{
-    (void)arg;
-    
-    OS_Delay(5000);
-
-    Test_TV2_RunAll();
-
-    while (1)
-    {
-        OS_Delay(1000);
+/* =========================================
+ * TASK 2: Ð?C C?M BI?N (CH? CH?Y KHI AUTO)
+ * ========================================= */
+void Task_Auto_Light(void *arg) {
+    while (1) {
+        // Ch? quét c?m bi?n và b?t/t?t LED ngoài khi dang ? ch? d? AUTO
+        if (current_mode == MODE_AUTO) {
+            
+            uint8_t sensor_val = GPIO_Read(SENSOR_PORT, SENSOR_PIN);
+            
+            // Logic module FC-51 LM393 (T?i = 1, Sáng = 0)
+            if (sensor_val == 1) { 
+                EXT_LED_On();   // Tr?i t?i -> B?t LED ngoài
+            } else {        
+                EXT_LED_Off();  // Tr?i sáng -> T?t LED ngoài
+            }
+        }
+        
+        OS_Delay(100); // Quét m?i 100ms
     }
 }
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
-
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-  HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
-
-  /* USER CODE BEGIN 2 */
-GPIO_Driver_Init();
-USB_CDC_Driver_Init();
-LED_Off();
-
-USB_CDC_SendString("System started\r\n");
-
-OS_Init();
-OS_Mem_Init();
-
-OS_CreateTask(Task_USB_Rx, 0, stack_usb_rx, 512, 2, 5, "usb_rx");
-OS_CreateTask(Task_Heartbeat, 0, stack_heartbeat, 192, 5, 5, "heartbeat");
-OS_CreateTask(Task_LED, 0, stack_led, 128, 10, 5, "led");
-OS_CreateTask(Task_Monitor, 0, stack_monitor, 768, 20, 5, "monitor");
-//OS_CreateTask(Task_TV2_Test, 0, stack_test, 512, 30, 5, "tv2_test");
-//OS_CreateTask(Task_USB_Flush, 0, stack_usb_flush, 128, 250, 3, "usb_flush");
-OS_CreateTask(Task_Idle, 0, stack_idle, 128, 254, 1, "idle");
-OS_Start();
-  /* USER CODE END 2 */
-
-  /* USER CODE BEGIN WHILE */
-
-
-  while (1)
-  {
-}
-
-}
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -325,11 +210,29 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
+/* =========================================
+ * HÀM MAIN
+ * ========================================= */
+int main(void) {
+    // 1. Kh?i t?o HAL và Clock
+    HAL_Init();
+    SystemClock_Config(); 
+    MX_GPIO_Init(); // Kh?i t?o các chân do CubeMX sinh ra (có thêm PA6)
+    
+    // 2. Kh?i t?o Driver c?a b?n
+    GPIO_Driver_Init();
+    
+    // 3. Kh?i t?o RTOS
+    OS_Init();
 
-#ifdef USE_FULL_ASSERT
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* USER CODE BEGIN 6 */
-  /* USER CODE END 6 */
+    // 4. T?o các Task
+    OS_CreateTask(Task_Button_Control, NULL, stack_button, 128, 2, 5, "Btn_Task");
+    OS_CreateTask(Task_Auto_Light, NULL, stack_sensor, 128, 3, 5, "Sens_Task");
+
+    // 5. B?t d?u b? l?p l?ch
+    OS_Start();
+
+    while (1) {
+        // CPU luôn b?n r?n trong các Task, không bao gi? roi xu?ng dây
+    }
 }
-#endif /* USE_FULL_ASSERT */

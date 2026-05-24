@@ -1,6 +1,6 @@
 myrtos_drivers\os_mutex.o: ..\MyOS\Src\os_mutex.c
-myrtos_drivers\os_mutex.o: ..\MyOS\Inc\os_mutex.h
-myrtos_drivers\os_mutex.o: ..\MyOS\Inc\os_types.h
+myrtos_drivers\os_mutex.o: ../MyOS/Inc/os_mutex.h
+myrtos_drivers\os_mutex.o: ../MyOS/Inc/os_types.h
 myrtos_drivers\os_mutex.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\os_mutex.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\os_mutex.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

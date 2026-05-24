@@ -39,5 +39,5 @@ myrtos_drivers\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_
 myrtos_drivers\usbd_cdc_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h
 myrtos_drivers\usbd_cdc_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
 myrtos_drivers\usbd_cdc_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
-myrtos_drivers\usbd_cdc_if.o: ..\MyDrivers\Inc\usb_cdc_driver.h
+myrtos_drivers\usbd_cdc_if.o: ../MyDrivers/Inc/usb_cdc_driver.h
 myrtos_drivers\usbd_cdc_if.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h

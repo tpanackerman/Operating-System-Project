@@ -1,5 +1,5 @@
 myrtos_drivers\gpio_driver.o: ..\MyDrivers\Src\gpio_driver.c
-myrtos_drivers\gpio_driver.o: ..\MyDrivers\Inc\gpio_driver.h
+myrtos_drivers\gpio_driver.o: ../MyDrivers/Inc/gpio_driver.h
 myrtos_drivers\gpio_driver.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\gpio_driver.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\gpio_driver.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

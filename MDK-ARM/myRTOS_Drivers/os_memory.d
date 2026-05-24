@@ -1,6 +1,6 @@
 myrtos_drivers\os_memory.o: ..\MyOS\Src\os_memory.c
-myrtos_drivers\os_memory.o: ..\MyOS\Inc\os_memory.h
-myrtos_drivers\os_memory.o: ..\MyOS\Inc\os_types.h
+myrtos_drivers\os_memory.o: ../MyOS/Inc/os_memory.h
+myrtos_drivers\os_memory.o: ../MyOS/Inc/os_types.h
 myrtos_drivers\os_memory.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\os_memory.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\os_memory.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

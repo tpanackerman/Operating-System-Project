@@ -1,9 +1,9 @@
 --cpu Cortex-M3
 "myrtos_drivers\startup_stm32f103xb.o"
+"myrtos_drivers\main.o"
 "myrtos_drivers\gpio.o"
 "myrtos_drivers\stm32f1xx_it.o"
 "myrtos_drivers\stm32f1xx_hal_msp.o"
-"myrtos_drivers\main.o"
 "myrtos_drivers\usb_device.o"
 "myrtos_drivers\usbd_desc.o"
 "myrtos_drivers\usbd_cdc_if.o"

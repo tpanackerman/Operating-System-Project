@@ -1,6 +1,6 @@
 myrtos_drivers\test_tv2.o: ..\MyOS\Test\test_tv2.c
-myrtos_drivers\test_tv2.o: ..\MyOS\Inc\os_memory.h
-myrtos_drivers\test_tv2.o: ..\MyOS\Inc\os_types.h
+myrtos_drivers\test_tv2.o: ../MyOS/Inc/os_memory.h
+myrtos_drivers\test_tv2.o: ../MyOS/Inc/os_types.h
 myrtos_drivers\test_tv2.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\test_tv2.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\test_tv2.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
@@ -29,10 +29,10 @@ myrtos_drivers\test_tv2.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr
 myrtos_drivers\test_tv2.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h
 myrtos_drivers\test_tv2.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h
 myrtos_drivers\test_tv2.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h
-myrtos_drivers\test_tv2.o: ..\MyOS\Inc\os_mutex.h
-myrtos_drivers\test_tv2.o: ..\MyOS\Inc\os_semaphore.h
-myrtos_drivers\test_tv2.o: ..\MyOS\Inc\os_queue.h
-myrtos_drivers\test_tv2.o: ..\MyDrivers\Inc\usb_cdc_driver.h
+myrtos_drivers\test_tv2.o: ../MyOS/Inc/os_mutex.h
+myrtos_drivers\test_tv2.o: ../MyOS/Inc/os_semaphore.h
+myrtos_drivers\test_tv2.o: ../MyOS/Inc/os_queue.h
+myrtos_drivers\test_tv2.o: ../MyDrivers/Inc/usb_cdc_driver.h
 myrtos_drivers\test_tv2.o: ../USB_DEVICE/App/usbd_cdc_if.h
 myrtos_drivers\test_tv2.o: ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h
 myrtos_drivers\test_tv2.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
@@ -46,4 +46,4 @@ myrtos_drivers\test_tv2.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/u
 myrtos_drivers\test_tv2.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
 myrtos_drivers\test_tv2.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
 myrtos_drivers\test_tv2.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
-myrtos_drivers\test_tv2.o: ..\MyDrivers\Inc\os_protocol.h
+myrtos_drivers\test_tv2.o: ../MyDrivers/Inc/os_protocol.h

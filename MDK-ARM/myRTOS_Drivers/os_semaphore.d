@@ -1,6 +1,6 @@
 myrtos_drivers\os_semaphore.o: ..\MyOS\Src\os_semaphore.c
-myrtos_drivers\os_semaphore.o: ..\MyOS\Inc\os_semaphore.h
-myrtos_drivers\os_semaphore.o: ..\MyOS\Inc\os_types.h
+myrtos_drivers\os_semaphore.o: ../MyOS/Inc/os_semaphore.h
+myrtos_drivers\os_semaphore.o: ../MyOS/Inc/os_types.h
 myrtos_drivers\os_semaphore.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\os_semaphore.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\os_semaphore.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

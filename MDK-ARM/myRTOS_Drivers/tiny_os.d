@@ -1,5 +1,5 @@
 myrtos_drivers\tiny_os.o: ..\MyDrivers\Src\tiny_os.c
-myrtos_drivers\tiny_os.o: ..\MyDrivers\Inc\tiny_os.h
+myrtos_drivers\tiny_os.o: ../MyDrivers/Inc/tiny_os.h
 myrtos_drivers\tiny_os.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 myrtos_drivers\tiny_os.o: ../Core/Inc/stm32f1xx_hal_conf.h
 myrtos_drivers\tiny_os.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
