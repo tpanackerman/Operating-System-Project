@@ -172,9 +172,9 @@ static OS_TCB_t *OS_SelectNextTask(void)
     }
 
     if (best_prio == 255)
-    {
-        return OS_CurrentTCB;
-    }
+	{
+    	return 0;
+	}
 
     /*
      * Round-robin trong nhóm cùng priority.

@@ -68,6 +68,17 @@ volatile SystemMode_t current_mode = MODE_OFF;
 // B? nh? Stack cho 2 Task
 uint32_t stack_button[128];
 uint32_t stack_sensor[128];
+uint32_t stack_usb_rx[512];
+uint32_t stack_heartbeat[192];
+uint32_t stack_led[128];
+uint32_t stack_monitor[768];
+uint32_t stack_idle[128];
+
+void Task_USB_Rx(void *arg);
+void Task_Heartbeat(void *arg);
+void Task_LED(void *arg);
+void Task_Monitor(void *arg);
+void Task_Idle(void *arg);
 
 /* =========================================
  * CÁC HÀM H? TR? ÐI?U KHI?N
@@ -198,7 +209,136 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Task_USB_Rx(void *arg)
+{
+    uint8_t buf[64];
 
+    while (1)
+    {
+        uint16_t n = USB_CDC_Receive(buf, sizeof(buf) - 1);
+
+        if (n > 0)
+        {
+            buf[n] = '\0';
+
+            USB_CDC_SendString("RX: ");
+            USB_CDC_Send(buf, n);
+            USB_CDC_SendString("\r\n");
+            USB_CDC_FlushTX();
+        }
+
+        OS_Delay(20);
+    }
+}
+
+void Task_Heartbeat(void *arg)
+{
+    Proto_Heartbeat_t hb;
+
+    while (1)
+    {
+        OS_Delay(1000);
+    }
+}
+
+void Task_LED(void *arg)
+{
+    while (1)
+    {
+        LED_Toggle();
+
+        if (USB_CDC_IsConnected())
+        {
+            OS_Delay(1000);   
+        }
+        else
+        {
+            OS_Delay(200);    
+        }
+    }
+}
+
+static const char *TaskStateToStr(OS_TaskState_t state)
+{
+    switch (state)
+    {
+        case OS_TASK_UNUSED:
+            return "UNUSED";
+
+        case OS_TASK_READY:
+            return "READY";
+
+        case OS_TASK_RUNNING:
+            return "RUNNING";
+
+        case OS_TASK_DELAYED:
+            return "DELAYED";
+
+        case OS_TASK_BLOCKED:
+            return "BLOCKED";
+
+        case OS_TASK_SUSPENDED:
+            return "SUSPEND";
+
+        default:
+            return "UNKNOWN";
+    }
+}
+
+void Task_Monitor(void *arg)
+{
+    while (1)
+    {
+        uint32_t now = OS_GetTick();
+
+        /*
+         * In dang text ASCII de tranh loi font/ky tu rac.
+         * Flush tung nhom nho de khong tran USB_TX_RING_SIZE.
+         */
+        USB_CDC_Printf("\r\n===== TASK MONITOR =====\r\n");
+        USB_CDC_Printf("tick=%lu | tasks=%u | mode=%u\r\n",
+                       (unsigned long)now,
+                       (unsigned int)OS_GetTaskCount(),
+                       (unsigned int)current_mode);
+        USB_CDC_Printf("ID  NAME        PR  STATE  STACK_FREE  RUN_COUNT  LAST_TICK\r\n");
+        USB_CDC_Printf("------------------------------------------------------------\r\n");
+        USB_CDC_FlushTX();
+        OS_Delay(5);
+
+        for (uint8_t i = 0; i < OS_GetTaskCount(); i++)
+        {
+            OS_TCB_t *t = OS_GetTaskInfo(i);
+
+            if (t != NULL)
+            {
+                USB_CDC_Printf("%u   %-10s  %u   %-5s  %lu        %lu        %lu\r\n",
+                               (unsigned int)t->id,
+                               (t->name != 0) ? t->name : "noname",
+                               (unsigned int)t->priority,
+                               TaskStateToStr(t->state),
+                               (unsigned long)OS_GetStackFreeBytes(i),
+                               (unsigned long)OS_GetTaskRunCount(i),
+                               (unsigned long)OS_GetTaskLastRunTick(i));
+
+                USB_CDC_FlushTX();
+                OS_Delay(5);
+            }
+        }
+
+        USB_CDC_Printf("------------------------------------------------------------\r\n");
+        USB_CDC_FlushTX();
+
+        OS_Delay(2000);
+    }
+}
+
+void Task_Idle(void *arg)
+{
+    while (1)
+    {
+        __WFI();
+    }
+}
 /* USER CODE END 4 */
 
 void Error_Handler(void)
@@ -216,21 +356,27 @@ void Error_Handler(void)
 int main(void) {
     // 1. Kh?i t?o HAL và Clock
     HAL_Init();
-    SystemClock_Config(); 
-    MX_GPIO_Init(); // Kh?i t?o các chân do CubeMX sinh ra (có thêm PA6)
-    
-    // 2. Kh?i t?o Driver c?a b?n
-    GPIO_Driver_Init();
-    
-    // 3. Kh?i t?o RTOS
-    OS_Init();
+	SystemClock_Config();
 
-    // 4. T?o các Task
-    OS_CreateTask(Task_Button_Control, NULL, stack_button, 128, 2, 5, "Btn_Task");
-    OS_CreateTask(Task_Auto_Light, NULL, stack_sensor, 128, 3, 5, "Sens_Task");
+	MX_GPIO_Init();
+	MX_USB_DEVICE_Init();
 
-    // 5. B?t d?u b? l?p l?ch
-    OS_Start();
+	GPIO_Driver_Init();
+	USB_CDC_Driver_Init();
+
+	OS_Init();
+	OS_Mem_Init();
+
+	OS_CreateTask(Task_Button_Control, NULL, stack_button, 128, 2, 5, "Btn_Task");
+	OS_CreateTask(Task_Auto_Light, NULL, stack_sensor, 128, 3, 5, "Sens_Task");
+
+	OS_CreateTask(Task_USB_Rx, NULL, stack_usb_rx, 512, 2, 5, "usb_rx");
+	OS_CreateTask(Task_Heartbeat, NULL, stack_heartbeat, 192, 5, 5, "heartbeat");
+	OS_CreateTask(Task_LED, NULL, stack_led, 128, 10, 5, "led");
+	OS_CreateTask(Task_Monitor, NULL, stack_monitor, 768, 20, 5, "monitor");
+	OS_CreateTask(Task_Idle, NULL, stack_idle, 128, 254, 1, "idle");
+
+	OS_Start();
 
     while (1) {
         // CPU luôn b?n r?n trong các Task, không bao gi? roi xu?ng dây

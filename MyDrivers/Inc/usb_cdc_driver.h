@@ -9,7 +9,7 @@
 #include <stdarg.h>
 
 /* ===== C?U HÌNH BUFFER ===== */
-#define USB_TX_RING_SIZE    512   /* B?t bu?c là luy th?a 2: 256, 512, 1024 */
+#define USB_TX_RING_SIZE    1024  /* B?t bu?c là luy th?a 2: 256, 512, 1024 */
 #define USB_RX_RING_SIZE    256
 #define USB_TX_PKT_MAX      64    /* USB FS t?i da 64 byte/packet */
 
